@@ -1,4 +1,4 @@
-# ✨ AI Particle Architect
+# ✨ Particle Architect
 
 A high-performance WebGL simulation platform for creative computational artists. Generate, manipulate, and publish massive 3D particle swarms with neural navigation, custom AI logic, and real-time visual effects.
 
