@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, Camera, Monitor, Info, RotateCw, Hand, Volume2, Eye, SlidersHorizontal } from 'lucide-react';
+import { X, Camera, Monitor, Info, RotateCw, Hand, Volume2, Eye, SlidersHorizontal, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore, useMusicStore } from '@/stores/appStore';
 import { useCameraCheck } from '@/hooks/useCameraCheck';
+import { MidiOscPanel } from './MidiOscPanel';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const { isPlaying } = useMusicStore();
   const { hasCamera, error: cameraError, checkCamera } = useCameraCheck();
-  const [activeTab, setActiveTab] = useState<'general' | 'controls' | 'display' | 'camera'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'controls' | 'display' | 'camera' | 'midiosc'>('general');
 
   const handleToggleHandControl = async () => {
     if (!handControlEnabled) {
@@ -79,6 +80,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             { id: 'controls', label: 'Controls', icon: SlidersHorizontal, badge: hasCustomControls ? controlKeys.length : 0 },
             { id: 'display', label: 'Display', icon: Monitor },
             { id: 'camera', label: 'Neural Nav', icon: Camera },
+            { id: 'midiosc', label: 'MIDI/OSC', icon: Radio },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -432,6 +434,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* MIDI/OSC Tab */}
+          {activeTab === 'midiosc' && (
+            <MidiOscPanel />
           )}
         </div>
 

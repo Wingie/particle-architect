@@ -30,6 +30,9 @@ export interface AppState {
   
   // Hand gesture
   handControlEnabled: boolean;
+
+  // MIDI/OSC
+  midiOscEnabled: boolean;
   
   // Media
   videoPlaying: boolean;

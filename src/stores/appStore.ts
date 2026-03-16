@@ -25,6 +25,9 @@ interface AppStore extends AppState {
   toggleSidebar: () => void;
   
   toggleHandControl: () => void;
+
+  midiOscEnabled: boolean;
+  toggleMidiOsc: () => void;
   
   setVideoPlaying: (playing: boolean) => void;
   setVideoVolume: (volume: number) => void;
@@ -74,6 +77,7 @@ const initialState: AppState = {
   sidebarCollapsed: false,
   
   handControlEnabled: false,
+  midiOscEnabled: false,
   
   videoPlaying: false,
   videoVolume: 0.5,
@@ -127,6 +131,8 @@ export const useAppStore = create<AppStore>()(
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       
       toggleHandControl: () => set((state) => ({ handControlEnabled: !state.handControlEnabled })),
+
+      toggleMidiOsc: () => set((state) => ({ midiOscEnabled: !state.midiOscEnabled })),
       
       setVideoPlaying: (videoPlaying) => set({ videoPlaying }),
       setVideoVolume: (videoVolume) => set({ videoVolume }),
@@ -212,6 +218,7 @@ export const useAppStore = create<AppStore>()(
         sidebarCollapsed: state.sidebarCollapsed,
         videoVolume: state.videoVolume,
         renderStyle: state.renderStyle,
+        midiOscEnabled: state.midiOscEnabled,
       }),
     }
   )

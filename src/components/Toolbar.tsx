@@ -3,7 +3,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Music,
   RotateCw, Hand, Maximize, Settings,
   Info, MessageSquare, HelpCircle, Download, X,
-  Volume2, VolumeX, Sliders
+  Volume2, VolumeX, Sliders, Radio
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore, useMusicStore } from '@/stores/appStore';
@@ -39,6 +39,8 @@ export function Toolbar({ onToggleFullscreen, onOpenSettings, onOpenHelp }: Tool
     videoHasAudio,
     videoVolume,
     setVideoVolume,
+    midiOscEnabled,
+    toggleMidiOsc,
   } = useAppStore();
 
   const { isPlaying, togglePlay, nextTrack, prevTrack, currentTrackIdx, setTrack } = useMusicStore();
@@ -253,6 +255,19 @@ export function Toolbar({ onToggleFullscreen, onOpenSettings, onOpenHelp }: Tool
         {!hasCamera && (
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
         )}
+      </button>
+
+      <button
+        onClick={toggleMidiOsc}
+        className={cn(
+          "w-10 h-10 flex items-center justify-center bg-black/60 backdrop-blur border rounded-lg transition-colors",
+          midiOscEnabled
+            ? "border-accent text-accent bg-accent/20"
+            : "border-white/15 hover:border-accent"
+        )}
+        title="Toggle MIDI/OSC Input"
+      >
+        <Radio className="w-5 h-5" />
       </button>
 
       <button

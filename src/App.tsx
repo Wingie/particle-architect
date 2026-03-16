@@ -13,6 +13,7 @@ import { AlertModal } from '@/components/AlertModal';
 import { GestureOverlay, GestureGuide } from '@/components/GestureOverlay';
 import { useAppStore, useMusicStore, useAlertStore } from '@/stores/appStore';
 import { useHandTracking } from '@/hooks/useHandTracking';
+import { useMidiOsc } from '@/hooks/useMidiOsc';
 import { useCameraCheck } from '@/hooks/useCameraCheck';
 import { generateSphere, generateCube, generateHelix, generateTorus, generateFromText, generateFromImage, generateFromVideoGrid, generateFromDrawPixels, generateBlueprint, generateFromModel } from '@/lib/shapes';
 import { updateShaderTime } from '@/lib/materials';
@@ -196,6 +197,7 @@ function App() {
 
   // Hand tracking
   useHandTracking(videoRef, canvasRef, cameraRef.current, controlsRef.current);
+  useMidiOsc();
 
   // Camera check
   const { hasCamera } = useCameraCheck();
