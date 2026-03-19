@@ -26,23 +26,28 @@ interface GestureState {
 export function useHandTracking(
   videoRef: React.RefObject<HTMLVideoElement>,
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  camera: THREE.Camera | null,
-  controls: any // OrbitControls
+  cameraObjRef: React.RefObject<THREE.Camera | null>,
+  controlsRef: React.RefObject<any>
 ) {
   const handsRef = useRef<any>(null);
   const cameraRef = useRef<any>(null);
+  const processingRef = useRef(false);
+  const lastFrameTimeRef = useRef(0);
+  const FRAME_INTERVAL = 1000 / 15; // Throttle to 15fps for hand tracking
   const gestureState = useRef<GestureState>({
     lastRotateX: null,
     lastRotateY: null,
     lastPinchX: null,
   });
-  
-  const { handControlEnabled, toggleHandControl, speed, setSpeed } = useAppStore();
+
+  const { handControlEnabled, toggleHandControl } = useAppStore();
 
   const onResults = useCallback((results: Results) => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    if (!canvas || !video || !camera || !controls) return;
+    const cam = cameraObjRef.current;
+    const ctrl = controlsRef.current;
+    if (!canvas || !video || !cam || !ctrl) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -51,6 +56,7 @@ export function useHandTracking(
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       const lm = results.multiHandLandmarks[0];
+      useAppStore.getState().setGestureActive(true);
 
       drawConnectorsFn(ctx, lm, HandConnections, { color: '#00ff88', lineWidth: 4 });
       drawLandmarksFn(ctx, lm, { color: '#ffffff', lineWidth: 2, radius: 4 });
@@ -70,14 +76,14 @@ export function useHandTracking(
           if (Math.abs(dx) > 0.002) {
             const zoomSpeed = 200.0;
             const forward = new THREE.Vector3();
-            camera.getWorldDirection(forward);
+            cam.getWorldDirection(forward);
 
             const cameraMove = forward.clone().multiplyScalar(-dx * zoomSpeed);
-            camera.position.add(cameraMove);
+            cam.position.add(cameraMove);
 
             const targetMove = forward.clone().multiplyScalar(-dx * zoomSpeed * 0.1);
-            controls.target.add(targetMove);
-            controls.update();
+            ctrl.target.add(targetMove);
+            ctrl.update();
           }
         }
         gestureState.current.lastPinchX = currentX;
@@ -92,8 +98,10 @@ export function useHandTracking(
           const dx = currentX - gestureState.current.lastPinchX;
 
           if (Math.abs(dx) > 0.005) {
-            const newSpeed = Math.max(0.1, Math.min(3.0, speed + dx * 2.0));
-            setSpeed(newSpeed);
+            // Read speed directly from store to avoid re-render loop
+            const currentSpeed = useAppStore.getState().speed;
+            const newSpeed = Math.max(0.1, Math.min(3.0, currentSpeed + dx * 2.0));
+            useAppStore.getState().setSpeed(newSpeed);
           }
         }
         gestureState.current.lastPinchX = currentX;
@@ -112,16 +120,16 @@ export function useHandTracking(
           if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
             const rotateSpeed = 3.0;
             const spherical = new THREE.Spherical();
-            spherical.setFromVector3(camera.position.clone().sub(controls.target));
+            spherical.setFromVector3(cam.position.clone().sub(ctrl.target));
 
             spherical.theta += dx * rotateSpeed;
             spherical.phi -= dy * rotateSpeed;
             spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
 
             const offset = new THREE.Vector3().setFromSpherical(spherical);
-            camera.position.copy(controls.target).add(offset);
-            camera.lookAt(controls.target);
-            controls.update();
+            cam.position.copy(ctrl.target).add(offset);
+            cam.lookAt(ctrl.target);
+            ctrl.update();
           }
         }
         gestureState.current.lastRotateX = x;
@@ -133,11 +141,12 @@ export function useHandTracking(
         gestureState.current.lastPinchX = null;
       }
     } else {
+      useAppStore.getState().setGestureActive(false);
       gestureState.current.lastRotateX = null;
       gestureState.current.lastRotateY = null;
       gestureState.current.lastPinchX = null;
     }
-  }, [camera, controls, speed, setSpeed]);
+  }, []);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -158,10 +167,21 @@ export function useHandTracking(
 
     const cameraUtils = new CameraConstructor(videoRef.current, {
       onFrame: async () => {
-        await hands.send({ image: videoRef.current! });
+        const now = performance.now();
+        if (processingRef.current || now - lastFrameTimeRef.current < FRAME_INTERVAL) return;
+        if (!videoRef.current) return;
+        processingRef.current = true;
+        lastFrameTimeRef.current = now;
+        try {
+          await hands.send({ image: videoRef.current });
+        } catch (err) {
+          console.warn('Hand tracking frame error:', err);
+        } finally {
+          processingRef.current = false;
+        }
       },
-      width: 1280,
-      height: 720,
+      width: 640,
+      height: 480,
     });
 
     cameraRef.current = cameraUtils;
@@ -170,7 +190,9 @@ export function useHandTracking(
       hands.close();
       cameraUtils.stop();
     };
-  }, [onResults, videoRef]);
+  // onResults is stable (no reactive deps), so this only runs once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoRef]);
 
   const startTracking = useCallback(async () => {
     if (cameraRef.current) {

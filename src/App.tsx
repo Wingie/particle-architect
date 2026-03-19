@@ -195,7 +195,7 @@ function App() {
   }, [incrementSimTime, renderStyle, simTime, mode, videoPlaying]);
 
   // Hand tracking
-  useHandTracking(videoRef, canvasRef, cameraRef.current, controlsRef.current);
+  useHandTracking(videoRef, canvasRef, cameraRef, controlsRef);
 
   // Camera check
   const { hasCamera } = useCameraCheck();

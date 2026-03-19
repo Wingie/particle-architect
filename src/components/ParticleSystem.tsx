@@ -244,17 +244,17 @@ interface ParticleSystemProps {
 function Scene({ shapeResult, customFunction, customFunctionVersion, count, onSetInfo, onAnnotate, onCameraReady }: ParticleSystemProps) {
   const controlsRef = useRef<any>(null);
   const { camera } = useThree();
-  const { autoSpin, handControlEnabled } = useAppStore();
+  const { autoSpin, gestureActive } = useAppStore();
 
   useEffect(() => {
     if (controlsRef.current) {
-      controlsRef.current.autoRotate = autoSpin && !handControlEnabled;
+      controlsRef.current.autoRotate = autoSpin && !gestureActive;
       controlsRef.current.autoRotateSpeed = 2.0;
     }
     if (onCameraReady && camera && controlsRef.current) {
       onCameraReady(camera, controlsRef.current);
     }
-  }, [autoSpin, handControlEnabled, camera, onCameraReady]);
+  }, [autoSpin, gestureActive, camera, onCameraReady]);
 
   return (
     <>
@@ -263,7 +263,7 @@ function Scene({ shapeResult, customFunction, customFunctionVersion, count, onSe
       <ambientLight intensity={0.5} />
       <directionalLight position={[50, 50, 50]} intensity={1.5} />
       <hemisphereLight intensity={1.5} groundColor="#444444" />
-      
+
       <ParticleMesh
         targetPositions={shapeResult.positions}
         targetColors={shapeResult.colors}
@@ -274,12 +274,12 @@ function Scene({ shapeResult, customFunction, customFunctionVersion, count, onSe
         onSetInfo={onSetInfo}
         onAnnotate={onAnnotate}
       />
-      
+
       <OrbitControls
         ref={controlsRef}
         enableDamping
         enablePan={false}
-        autoRotate={autoSpin && !handControlEnabled}
+        autoRotate={autoSpin && !gestureActive}
         autoRotateSpeed={2}
       />
     </>

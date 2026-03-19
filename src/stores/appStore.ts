@@ -25,6 +25,8 @@ interface AppStore extends AppState {
   toggleSidebar: () => void;
   
   toggleHandControl: () => void;
+  gestureActive: boolean;
+  setGestureActive: (active: boolean) => void;
   
   setVideoPlaying: (playing: boolean) => void;
   setVideoVolume: (volume: number) => void;
@@ -74,6 +76,7 @@ const initialState: AppState = {
   sidebarCollapsed: false,
   
   handControlEnabled: false,
+  gestureActive: false,
   
   videoPlaying: false,
   videoVolume: 0.5,
@@ -127,6 +130,7 @@ export const useAppStore = create<AppStore>()(
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       
       toggleHandControl: () => set((state) => ({ handControlEnabled: !state.handControlEnabled })),
+      setGestureActive: (active) => set({ gestureActive: active }),
       
       setVideoPlaying: (videoPlaying) => set({ videoPlaying }),
       setVideoVolume: (videoVolume) => set({ videoVolume }),
