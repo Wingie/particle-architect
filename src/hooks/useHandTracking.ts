@@ -33,7 +33,8 @@ export function useHandTracking(
   const cameraRef = useRef<any>(null);
   const processingRef = useRef(false);
   const lastFrameTimeRef = useRef(0);
-  const FRAME_INTERVAL = 1000 / 15; // Throttle to 15fps for hand tracking
+  const lastGestureActiveRef = useRef(false);
+  const FRAME_INTERVAL = 1000 / 10; // Throttle to 10fps for hand tracking
   const gestureState = useRef<GestureState>({
     lastRotateX: null,
     lastRotateY: null,
@@ -56,7 +57,10 @@ export function useHandTracking(
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       const lm = results.multiHandLandmarks[0];
-      useAppStore.getState().setGestureActive(true);
+      if (!lastGestureActiveRef.current) {
+        lastGestureActiveRef.current = true;
+        useAppStore.getState().setGestureActive(true);
+      }
 
       drawConnectorsFn(ctx, lm, HandConnections, { color: '#00ff88', lineWidth: 4 });
       drawLandmarksFn(ctx, lm, { color: '#ffffff', lineWidth: 2, radius: 4 });
@@ -141,7 +145,10 @@ export function useHandTracking(
         gestureState.current.lastPinchX = null;
       }
     } else {
-      useAppStore.getState().setGestureActive(false);
+      if (lastGestureActiveRef.current) {
+        lastGestureActiveRef.current = false;
+        useAppStore.getState().setGestureActive(false);
+      }
       gestureState.current.lastRotateX = null;
       gestureState.current.lastRotateY = null;
       gestureState.current.lastPinchX = null;
@@ -157,7 +164,7 @@ export function useHandTracking(
 
     hands.setOptions({
       maxNumHands: 1,
-      modelComplexity: 1,
+      modelComplexity: 0,
       minDetectionConfidence: 0.6,
       minTrackingConfidence: 0.6,
     });
@@ -180,8 +187,8 @@ export function useHandTracking(
           processingRef.current = false;
         }
       },
-      width: 640,
-      height: 480,
+      width: 320,
+      height: 240,
     });
 
     cameraRef.current = cameraUtils;
